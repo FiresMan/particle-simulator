@@ -84,6 +84,16 @@ class Simulation:
                 self.quant_vec[offset + 3] *= -1
         
     
+    def run(self, t, dt, d_0 = 0):
+        history = []
+        q_vec = self.quant_vec
+        history.append(q_vec)
+        for step in range(t // dt):
+            d_0 += dt
+            q_vec = self.rk4(d_0, dt)
+            history.append(q_vec)
+        return history
+    
     def draw(self):
         for i in range(self.n_bodies):
             offset = i * 4
@@ -105,8 +115,11 @@ def nbody_solve(t, y, types):
                 dx = y[joffset] - y[ioffset]
                 dy = y[ioffset+1] - y[joffset+1]
                 r = (dx**2+dy**2)**0.5
-                ax = ((Particle.atr_table[types[i] - 1][types[j] - 1] / r**3) * dx  - (Particle.rep_table[types[i] - 1][types[j] - 1] / r**7) * dx) * (2 / (1 + math.exp(-SMOTH_COEF_A * (r / SMOTH_COEF_B)**2)) - 1)
-                ay = ((Particle.atr_table[types[i] - 1][types[j] - 1] / r**3) * dy - (Particle.rep_table[types[i] - 1][types[j] - 1] / r**7) * dy) * (2 / (1 + math.exp(-SMOTH_COEF_A * (r / SMOTH_COEF_B)**2)) - 1)
+                if r != 0:
+                    ax = ((Particle.atr_table[types[i] - 1][types[j] - 1] / r**3) * dx  - (Particle.rep_table[types[i] - 1][types[j] - 1] / r**7) * dx) * (2 / (1 + math.exp(-SMOTH_COEF_A * (r / SMOTH_COEF_B)**2)) - 1)
+                    ay = ((Particle.atr_table[types[i] - 1][types[j] - 1] / r**3) * dy - (Particle.rep_table[types[i] - 1][types[j] - 1] / r**7) * dy) * (2 / (1 + math.exp(-SMOTH_COEF_A * (r / SMOTH_COEF_B)**2)) - 1)
+                else:
+                    ax = ay = 0
                 solved_vector[ioffset+2] += ax
                 solved_vector[ioffset+3] += ay
     return solved_vector
